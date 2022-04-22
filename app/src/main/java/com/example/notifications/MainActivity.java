@@ -16,6 +16,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.RemoteViews;
 
 import com.example.notifications.databinding.ActivityMainBinding;
 import com.google.android.material.button.MaterialButton;
@@ -115,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
         Bitmap androidImage = BitmapFactory.decodeResource(getResources(), R.drawable.mascot_1);
 
+        //Creating default expandable notification
         NotificationCompat.Builder builder = getNotificationBuilder();
         builder.setLargeIcon(androidImage)
                 .setStyle(
@@ -131,11 +133,11 @@ public class MainActivity extends AppCompatActivity {
     private void updateNotification() {
         Bitmap androidImage = BitmapFactory.decodeResource(getResources(), R.drawable.mascot_1);
 
+        //Updating to a custom expandable notification
         NotificationCompat.Builder builder = getNotificationBuilder();
-        builder.setStyle(
-                new NotificationCompat.BigPictureStyle()
-                .bigPicture(androidImage)
-                .setBigContentTitle("Notification updated"));
+
+        RemoteViews defaultNotificationLayout = new RemoteViews(getPackageName(), R.layout.custom_default_notification);
+        RemoteViews expandedNotificationLayout = new RemoteViews(getPackageName(), R.layout.custom_default_notification);
 
         notificationManager.notify(NOTIFICATION_ID, builder.build());
 

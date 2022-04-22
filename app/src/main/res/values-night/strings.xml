@@ -3,4 +3,5 @@
     <string name="notify">Notify</string>
     <string name="update">Update</string>
     <string name="cancel">Cancel</string>
+    <string name="text_for_custom_expanded_notification">Text for custom expanded notification</string>
 </resources>
