@@ -6,7 +6,10 @@ import androidx.core.app.NotificationCompat;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -24,6 +27,11 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG_TAPPED_OR_CLEARED = "TAG_TAPPED_OR_CLEARED";
     private static final String TAPPED = "TAPPED";
     private static final String CLEARED = "CLEARED";
+
+    private static final String ACTION_UPDATE_NOTIFICATION =
+            BuildConfig.APPLICATION_ID + ".ACTION_UPDATE_NOTIFICATION";
+    private final NotificationReceiver receiver = new NotificationReceiver();
+
     private static final int NOTIFICATION_ID = 0;
     private MaterialButton buttonNotify, buttonUpdate, buttonCancel;
     private NotificationManager notificationManager;
@@ -38,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         buttonUpdate = binding.buttonUpdate;
         buttonCancel = binding.buttonCancel;
 
-        Intent pendingIntent = getIntent();
+        /*Intent pendingIntent = getIntent();
         if (pendingIntent != null) {
             if (pendingIntent.hasExtra(TAG_TAPPED_OR_CLEARED)) {
                 Log.d("Pending Intent", "Has Extra");
@@ -54,13 +62,14 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("Pending else check", pendingIntent.getStringExtra(TAG_TAPPED_OR_CLEARED));
                 }
             }
-        }
+        }*/
+
+        this.registerReceiver(receiver, new IntentFilter(ACTION_UPDATE_NOTIFICATION));
 
         buttonNotify.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 sendNotification();
-                toggleButtons(false, true, true);
             }
         });
 
@@ -68,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 updateNotification();
-                toggleButtons(false, false, true);
             }
         });
 
@@ -76,7 +84,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 cancelNotification();
-                toggleButtons(true, false, false);
             }
         });
 
@@ -99,21 +106,45 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendNotification() {
+
+        Intent updateIntent = new Intent(ACTION_UPDATE_NOTIFICATION);
+        PendingIntent updatePendingIntent = PendingIntent.getBroadcast(this,
+                NOTIFICATION_ID,
+                updateIntent,
+                PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+
+        Bitmap androidImage = BitmapFactory.decodeResource(getResources(), R.drawable.mascot_1);
+
         NotificationCompat.Builder builder = getNotificationBuilder();
+        builder.setLargeIcon(androidImage)
+                .setStyle(
+                        new NotificationCompat.BigPictureStyle()
+                        .bigPicture(androidImage)
+                        .bigLargeIcon(null))
+                .addAction(R.drawable.ic_update, "UPDATE NOTIFICATION", updatePendingIntent);
+
         notificationManager.notify(NOTIFICATION_ID, builder.build());
+
+        toggleButtons(false, true, true);
     }
 
     private void updateNotification() {
         Bitmap androidImage = BitmapFactory.decodeResource(getResources(), R.drawable.mascot_1);
+
         NotificationCompat.Builder builder = getNotificationBuilder();
-        builder.setStyle(new NotificationCompat.BigPictureStyle()
+        builder.setStyle(
+                new NotificationCompat.BigPictureStyle()
                 .bigPicture(androidImage)
                 .setBigContentTitle("Notification updated"));
+
         notificationManager.notify(NOTIFICATION_ID, builder.build());
+
+        toggleButtons(false, false, true);
     }
 
     private void cancelNotification() {
         notificationManager.cancel(NOTIFICATION_ID);
+        toggleButtons(true, false, false);
     }
 
     private NotificationCompat.Builder getNotificationBuilder() {
@@ -125,19 +156,18 @@ public class MainActivity extends AppCompatActivity {
                 notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        Intent clearedIntent = new Intent(this, MainActivity.class);
+        /*Intent clearedIntent = new Intent(this, MainActivity.class);
         clearedIntent.putExtra(TAG_TAPPED_OR_CLEARED, CLEARED);
         PendingIntent pendingClearedIntent = PendingIntent.getActivity(this,
                 NOTIFICATION_ID,
                 clearedIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);*/
 
         return new NotificationCompat.Builder(this, PRIMARY_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_android)
                 .setContentTitle("You've been notified")
                 .setContentText("Notification text.")
-                .setSmallIcon(R.drawable.ic_android)
                 .setAutoCancel(true)
-                .setDeleteIntent(pendingClearedIntent)
                 .setContentIntent(pendingNotificationIntent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setDefaults(NotificationCompat.DEFAULT_ALL);
@@ -147,5 +177,23 @@ public class MainActivity extends AppCompatActivity {
         buttonNotify.setEnabled(notifyEnabled);
         buttonUpdate.setEnabled(updateEnabled);
         buttonCancel.setEnabled(cancelEnabled);
+    }
+
+    @Override
+    protected void onDestroy() {
+        unregisterReceiver(receiver);
+
+        super.onDestroy();
+    }
+
+    public class NotificationReceiver extends BroadcastReceiver {
+
+        public NotificationReceiver() {}
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            updateNotification();
+        }
+
     }
 }
