@@ -4,14 +4,15 @@
     android:layout_height="wrap_content"
     android:id="@+id/layout_custom_default"
     android:orientation="vertical"
-    android:gravity="center"
+    android:padding="12dp"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <Button
-        android:id="@+id/button_update_notification"
+    <TextView
+        android:id="@+id/view_update_notification"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/update"
-        style="@style/Widget.Material3.Button.OutlinedButton" />
+        android:text="@string/ready_to_roll"
+        android:padding="4dp"
+        style="@style/Custom.Text.Notifications" />
 
 </LinearLayout>

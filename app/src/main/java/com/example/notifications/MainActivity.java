@@ -13,6 +13,8 @@ import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.Binder;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -23,19 +25,21 @@ import com.google.android.material.button.MaterialButton;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String PRIMARY_CHANNEL_ID = "PRIMARY_NOTIFICATIONS_CHANNEL";
-    private static final String PRIMARY_CHANNEL_NAME = "Mascot Notification";
-    private static final String TAG_TAPPED_OR_CLEARED = "TAG_TAPPED_OR_CLEARED";
-    private static final String TAPPED = "TAPPED";
-    private static final String CLEARED = "CLEARED";
+    public static final String PRIMARY_CHANNEL_ID = "PRIMARY_NOTIFICATIONS_CHANNEL";
+    public static final String PRIMARY_CHANNEL_NAME = "Mascot Notification";
 
-    private static final String ACTION_UPDATE_NOTIFICATION =
-            BuildConfig.APPLICATION_ID + ".ACTION_UPDATE_NOTIFICATION";
-    private final NotificationReceiver receiver = new NotificationReceiver();
+    public static final String ACTION_SEND_NOTIFICATION =
+            BuildConfig.APPLICATION_ID + ".ACTION_SEND_NOTIFICATION";
+    private final UpdateNotificationReceiver updateReceiver = new UpdateNotificationReceiver();
 
-    private static final int NOTIFICATION_ID = 0;
+    public static final String ACTION_CANCEL_NOTIFICATION =
+            BuildConfig.APPLICATION_ID + ".ACTION_CANCEL_NOTIFICATION";
+
+    public static final int NOTIFICATION_ID = 0;
     private MaterialButton buttonNotify, buttonUpdate, buttonCancel;
     private NotificationManager notificationManager;
+    
+    private Bitmap androidImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
         buttonNotify = binding.buttonNotify;
         buttonUpdate = binding.buttonUpdate;
         buttonCancel = binding.buttonCancel;
+        
+        androidImage = BitmapFactory.decodeResource(getResources(), R.drawable.mascot_1);
 
         /*Intent pendingIntent = getIntent();
         if (pendingIntent != null) {
@@ -65,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }*/
 
-        this.registerReceiver(receiver, new IntentFilter(ACTION_UPDATE_NOTIFICATION));
+        this.registerReceiver(updateReceiver, new IntentFilter(ACTION_SEND_NOTIFICATION));
 
         buttonNotify.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -106,71 +112,66 @@ public class MainActivity extends AppCompatActivity {
         notificationManager.createNotificationChannel(notificationChannel);
     }
 
-    private void sendNotification() {
+    public void sendNotification() {
 
-        Intent updateIntent = new Intent(ACTION_UPDATE_NOTIFICATION);
+        Intent updateIntent = new Intent(ACTION_SEND_NOTIFICATION);
         PendingIntent updatePendingIntent = PendingIntent.getBroadcast(this,
                 NOTIFICATION_ID,
                 updateIntent,
                 PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
 
-        Bitmap androidImage = BitmapFactory.decodeResource(getResources(), R.drawable.mascot_1);
-
         //Creating default expandable notification
         NotificationCompat.Builder builder = getNotificationBuilder();
-        builder.setLargeIcon(androidImage)
+        builder.setContentTitle("You've been notified")
+                .setContentText("Notification text.")
+                .setLargeIcon(androidImage)
                 .setStyle(
                         new NotificationCompat.BigPictureStyle()
                         .bigPicture(androidImage)
                         .bigLargeIcon(null))
-                .addAction(R.drawable.ic_update, "UPDATE NOTIFICATION", updatePendingIntent);
+                .addAction(R.drawable.ic_update, "Update", updatePendingIntent);
 
         notificationManager.notify(NOTIFICATION_ID, builder.build());
 
         toggleButtons(false, true, true);
     }
 
-    private void updateNotification() {
-        Bitmap androidImage = BitmapFactory.decodeResource(getResources(), R.drawable.mascot_1);
+    public void updateNotification() {
 
-        //Updating to a custom expandable notification
+        Intent ytIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=dQw4w9WgXcQ"));
+        PendingIntent pendingYTIntent = PendingIntent.getActivity(this,
+                NOTIFICATION_ID,
+                ytIntent,
+                PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        RemoteViews expandedNotificationLayout = new RemoteViews(getPackageName(), R.layout.custom_expanded_notification);
+        RemoteViews collapsedNotificationLayout = new RemoteViews(getPackageName(), R.layout.custom_collapsed_notification);
+
+        expandedNotificationLayout.setOnClickPendingIntent(R.id.view_open_link, pendingYTIntent);
+        collapsedNotificationLayout.setOnClickPendingIntent(R.id.view_open_link, pendingYTIntent);
+
         NotificationCompat.Builder builder = getNotificationBuilder();
-
-        RemoteViews defaultNotificationLayout = new RemoteViews(getPackageName(), R.layout.custom_default_notification);
-        RemoteViews expandedNotificationLayout = new RemoteViews(getPackageName(), R.layout.custom_default_notification);
+        builder.setContentIntent(pendingYTIntent)
+                .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
+                .setCustomContentView(collapsedNotificationLayout)
+                .setCustomBigContentView(expandedNotificationLayout);
 
         notificationManager.notify(NOTIFICATION_ID, builder.build());
 
         toggleButtons(false, false, true);
     }
 
-    private void cancelNotification() {
+    public void cancelNotification() {
         notificationManager.cancel(NOTIFICATION_ID);
         toggleButtons(true, false, false);
     }
 
     private NotificationCompat.Builder getNotificationBuilder() {
 
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        notificationIntent.putExtra(TAG_TAPPED_OR_CLEARED, TAPPED);
-        PendingIntent pendingNotificationIntent = PendingIntent.getActivity(this,
-                NOTIFICATION_ID,
-                notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
-        /*Intent clearedIntent = new Intent(this, MainActivity.class);
-        clearedIntent.putExtra(TAG_TAPPED_OR_CLEARED, CLEARED);
-        PendingIntent pendingClearedIntent = PendingIntent.getActivity(this,
-                NOTIFICATION_ID,
-                clearedIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);*/
-
         return new NotificationCompat.Builder(this, PRIMARY_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_android)
-                .setContentTitle("You've been notified")
-                .setContentText("Notification text.")
+                .setLargeIcon(androidImage)
                 .setAutoCancel(true)
-                .setContentIntent(pendingNotificationIntent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setDefaults(NotificationCompat.DEFAULT_ALL);
     }
@@ -183,19 +184,17 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        unregisterReceiver(receiver);
+        unregisterReceiver(updateReceiver);
 
         super.onDestroy();
     }
 
-    public class NotificationReceiver extends BroadcastReceiver {
-
-        public NotificationReceiver() {}
+    public class UpdateNotificationReceiver extends BroadcastReceiver {
+        public UpdateNotificationReceiver() {}
 
         @Override
         public void onReceive(Context context, Intent intent) {
             updateNotification();
         }
-
     }
 }

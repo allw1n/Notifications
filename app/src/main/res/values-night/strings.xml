@@ -4,4 +4,5 @@
     <string name="update">Update</string>
     <string name="cancel">Cancel</string>
     <string name="text_for_custom_expanded_notification">Text for custom expanded notification</string>
+    <string name="ready_to_roll">Ready to roll???</string>
 </resources>
