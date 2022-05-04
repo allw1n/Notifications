@@ -3,10 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/allwin/AndroidStudioProjects/Notifications/app/src/main/res/drawable/notification_bg_dark.xml" value="0.196" />
         <entry key="..\:/Users/allwin/AndroidStudioProjects/Notifications/app/src/main/res/drawable/notification_bg_light.xml" value="0.196" />
         <entry key="..\:/Users/allwin/AndroidStudioProjects/Notifications/app/src/main/res/layout/activity_main.xml" value="0.15" />
         <entry key="..\:/Users/allwin/AndroidStudioProjects/Notifications/app/src/main/res/layout/custom_default_notification.xml" value="0.25" />
-        <entry key="..\:/Users/allwin/AndroidStudioProjects/Notifications/app/src/main/res/layout/custom_expanded_notification.xml" value="0.25" />
+        <entry key="..\:/Users/allwin/AndroidStudioProjects/Notifications/app/src/main/res/layout/custom_expanded_notification.xml" value="0.33" />
       </map>
     </option>
   </component>

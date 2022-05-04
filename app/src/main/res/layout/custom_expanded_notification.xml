@@ -19,9 +19,9 @@
         android:id="@+id/view_open_link"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:clickable="true"
         android:layout_marginTop="6dp"
         android:text="@string/open_link"
-        android:clickable="true"
-        style="@style/Custom.TextButton.Notifications"/>
+        style="@style/Custom.TextButton.Notifications" />
 
 </LinearLayout>

@@ -3,6 +3,7 @@ package com.example.notifications;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -129,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                         new NotificationCompat.BigPictureStyle()
                         .bigPicture(androidImage)
                         .bigLargeIcon(null))
-                .addAction(R.drawable.ic_update, "Update", updatePendingIntent);
+                .addAction(R.drawable.ic_update, "UPDATE", updatePendingIntent);
 
         notificationManager.notify(NOTIFICATION_ID, builder.build());
 
@@ -148,7 +149,6 @@ public class MainActivity extends AppCompatActivity {
         RemoteViews collapsedNotificationLayout = new RemoteViews(getPackageName(), R.layout.custom_collapsed_notification);
 
         expandedNotificationLayout.setOnClickPendingIntent(R.id.view_open_link, pendingYTIntent);
-        collapsedNotificationLayout.setOnClickPendingIntent(R.id.view_open_link, pendingYTIntent);
 
         NotificationCompat.Builder builder = getNotificationBuilder();
         builder.setContentIntent(pendingYTIntent)
