@@ -16,8 +16,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.service.notification.StatusBarNotification;
 import android.util.Log;
-import android.view.View;
 import android.widget.RemoteViews;
 
 import com.example.notifications.databinding.ActivityMainBinding;
@@ -47,7 +47,9 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences tappedPrefs;
     private SharedPreferences.Editor tappedEditor;
 
-    private MaterialButton buttonNotify, buttonUpdate, buttonCancel;
+    private MaterialButton buttonNotify;
+    private MaterialButton buttonUpdate;
+    private MaterialButton buttonCancel;
     private NotificationManager notificationManager;
     
     private Bitmap androidImage;
@@ -61,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         buttonNotify = binding.buttonNotify;
         buttonUpdate = binding.buttonUpdate;
         buttonCancel = binding.buttonCancel;
+        MaterialButton buttonCheck = binding.buttonCheck;
         
         androidImage = BitmapFactory.decodeResource(getResources(), R.drawable.mascot_1);
 
@@ -78,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
         buttonUpdate.setOnClickListener(view -> updateNotification());
 
         buttonCancel.setOnClickListener(view -> cancelNotification());
+
+        buttonCheck.setOnClickListener(view -> checkActiveNotifications());
 
         createNotificationChannel();
     }
@@ -100,9 +105,6 @@ public class MainActivity extends AppCompatActivity {
     public void sendNotification() {
 
         Log.d("sendNotification", "called");
-
-        tappedEditor.putString(TAPPED, NOTIFIED);
-        tappedEditor.apply();
 
         Intent broadcastUpdateIntent = new Intent(ACTION_UPDATE_NOTIFICATION);
 
@@ -173,6 +175,9 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("cancelNotification", "called");
 
+        tappedEditor.clear();
+        tappedEditor.apply();
+
         notificationManager.cancel(NOTIFICATION_ID);
         toggleButtons(true, false, false);
     }
@@ -198,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            tappedEditor.putString(TAPPED_PREFS, BROADCAST_UPDATED);
+            tappedEditor.putString(TAPPED, NOTIFIED);
             tappedEditor.apply();
             updateNotification();
         }
@@ -224,13 +229,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        if (tappedPrefs.getString(TAPPED, "").equals(BROADCAST_UPDATED)) {
+        Log.d("onResume", "called");
+        if (tappedPrefs.getString(TAPPED, "").equals(NOTIFIED)) checkActiveNotifications();
 
-            Log.d("onResume", tappedPrefs.getString(TAPPED, ""));
-            toggleButtons(true, false, false);
-            tappedEditor.clear();
-            tappedEditor.apply();
-        }
         super.onResume();
     }
 
@@ -239,10 +240,36 @@ public class MainActivity extends AppCompatActivity {
         if (intent.getStringExtra(TAPPED).equals(NOTIFIED)) {
 
             Log.d("Notified intent extra", intent.getStringExtra(TAPPED));
-            tappedEditor.putString(TAPPED_PREFS, ACTIVITY_UPDATED);
+            tappedEditor.putString(TAPPED, ACTIVITY_UPDATED);
             tappedEditor.apply();
             updateNotification();
         }
         super.onNewIntent(intent);
+    }
+
+    private void checkActiveNotifications() {
+
+        Log.d("checkActiveNotifications", "called");
+
+        try {
+            StatusBarNotification[] statusBarNotifications = notificationManager.getActiveNotifications();
+
+            if (statusBarNotifications != null) {
+                for (StatusBarNotification statusBarNotification : statusBarNotifications) {
+
+                    Log.d("Active Notification Package", statusBarNotification.getPackageName());
+                    Log.d("Active Notification ID", String.valueOf(statusBarNotification.getId()));
+
+                    if (statusBarNotification.getPackageName().equals(BuildConfig.APPLICATION_ID)) {
+                        Log.d("inside for-if", "null");
+                        return;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        toggleButtons(true, false, false);
     }
 }
